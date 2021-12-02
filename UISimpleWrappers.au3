@@ -1,13 +1,52 @@
-#include <CUIAutomation2.au3>
+#include-once
 
-; Currently supported property values for parsing: Bool, Type, Class, Name, ID, AccessKey
-Global Const $__g_UISWrapperProperties[][] = [_
-	["Name", "UISWrappers"], _
-	["Version", "0.0.0.1"], _
-	["Updated", "November 25, 2019"], _
-	["Authors", "Seadoggie01"], _
-	["Contributors", "LarsJ"] _
-]
+; #INDEX# =======================================================================================================================
+; Title .........: UI Simple Wrappers
+; AutoIt Version : 3.3.14.5
+; UDF Version ...: 0.0.0.1
+; Language ......: English
+; Description ...: A collection of functions for using UI Automation. Simply.
+; Author(s) .....: Seadoggie01
+; Modified.......: 20210120 (YYYYMMDD)
+; Contributors ..: LarsJ (this is based almost entirely off of his examples)
+;                  junkew (without his UDF, I never would've attempted this)
+; Resources .....:
+; ===============================================================================================================================
+
+#include <CUIAutomation2.au3> ; This needs to be downloaded elsewhere. I've used the version available here --> https://www.autoitscript.com/forum/topic/201683-ui-automation-udfs/
+; #include <UIAWrappers.au3> ; This was here for my reference (with TreeView scope(?). I still don't quite get them)
+
+; Currently supported property values for text parsing: Bool, Type, Class, Name, ID, AccessKey, AcceleratorKey, LegacyIAccessibleState
+; 	See __UIW_ParsePropertyCondition for more info
+
+#CS
+
+This has been a long journey. It all started with a program that default AutoIt functions couldn't handle. I started trying to use junkew's UDF,
+but I was too new to AutoIt and too impatient. When I didn't get results fast enough, I switched to Mouse* functions. Later, I returned to find
+LarsJ's examples. I was confused how his code was so different, but I gave it a shot. I got a couple things working, but I hated pointer variables.
+This UDF stems from my hatred of pointers. Yeah. After I started getting things working, I noticed the repetitiveness of the code. Then I got
+the idea to start combining some of the conditions into simpler terms. I realized the AutoIt methods made a lot of sense, so I modeled it after
+them. Hopefully, you find this UDF helpful, enlighning, and/or hysterical.
+
+-- Seadoggie01
+
+P.S. Like with all my code, steal it, break it, warp it, just don't pretend it's yours... unless it's broken... then it's all yours!
+
+Remarks:
+
+	* This looks like a TON of functions, I know. However, a lot of these are shortcuts for _UIW_PropertyCondition. They just specify the $UIA_PropertyId for you.
+		AND most of the functions accept a string instead of a control, skipping these functions entirely. Again, see examples!
+
+	* Because of the compound nature of some of these functions, I've implemented the function _UIW_ErrorStack. This contains the name and error from each function
+		The stack is only ever cleared by YOU! It returns an array of [[function, error]], which you can pass to _ArrayDisplay to track down errors. Hopefully, I can
+		ditch this in the future, as I hate it now.
+
+	* The global UI Automation object is used when a string is passed to a function instead of a condition. This allows me to build a condition from the string.
+		See Examples. The object is only set when _UIW_Create is called, so it's a good idea (mandatory?) to use this function first.
+
+	* I don't think I implemented nearly enough error handlers in these functions (I got bored), so a global error handler probably isn't a bad idea
+
+#CE
 
 Global $__g_oUIAutomation
 
@@ -25,6 +64,7 @@ Global Const $UIW_Element[2] = [$sIID_IUIAutomationElement, $dtagIUIAutomationEl
 Global Const $UIW_ElementArray[2] = [$sIID_IUIAutomationElementArray, $dtagIUIAutomationElementArray]
 Global Const $UIW_EventHandler[2] = [$sIID_IUIAutomationEventHandler, $dtagIUIAutomationEventHandler]
 Global Const $UIW_ExpandCollapsePattern[3] = [$sIID_IUIAutomationExpandCollapsePattern, $dtagIUIAutomationExpandCollapsePattern, $UIA_ExpandCollapsePatternId]
+Global Const $UIW_ExpandCollapseState[3] = [$sIID_IUIAutomationExpandCollapsePattern, $dtagIUIAutomationExpandCollapsePattern, $UIA_ExpandCollapsePatternId]
 Global Const $UIW_FocusChangedEventHandler[2] = [$sIID_IUIAutomationFocusChangedEventHandler, $dtagIUIAutomationFocusChangedEventHandler]
 Global Const $UIW_GridItemPattern[3] = [$sIID_IUIAutomationGridItemPattern, $dtagIUIAutomationGridItemPattern, $UIA_GridItemPatternId]
 Global Const $UIW_GridPattern[3] = [$sIID_IUIAutomationGridPattern, $dtagIUIAutomationGridPattern, $UIA_GridPatternId]
@@ -61,6 +101,196 @@ Global Const $UIW_WindowPattern[3] = [$sIID_IUIAutomationWindowPattern, $dtagIUI
 #EndRegion ### Global Consts ###
 
 ; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_AcceleratorKey
+; Description ...:
+; Syntax ........: _UIW_AcceleratorKey($oUIAutomation, $sCondition)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $sCondition          - a string value.
+; Return values .: None
+; Author ........: Seadoggie01
+; Modified ......: June 1, 2020 (@14:55:10)
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_AcceleratorKeyPropertyCondition($oUIAutomation, $sCondition)
+
+	Local $ret = _UIW_PropertyCondition($oUIAutomation, $UIA_AcceleratorKeyPropertyId, $sCondition)
+	Return SetError(@error, @extended, $ret)
+
+EndFunc   ;==>_UIW_AcceleratorKeyPropertyCondition
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_AccessKeyPropery
+; Description ...:
+; Syntax ........: _UIW_AccessKeyPropery($oUIAutomation, $sCondition)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $sCondition          - a string value.
+; Return values .: None
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_AccessKeyProperyCondition($oUIAutomation, $sCondition)
+
+	Local $ret = _UIW_PropertyCondition($oUIAutomation, $UIA_AccessKeyPropertyId, $sCondition)
+	Return SetError(@error, @extended, $ret)
+
+EndFunc   ;==>_UIW_AccessKeyProperyCondition
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_AutomationIdProperty
+; Description ...:
+; Syntax ........: _UIW_AutomationIdProperty($oUIAutomation, $sCondition)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $sCondition          - a string value.
+; Return values .: None
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_AutomationIdPropertyCondition($oUIAutomation, $sCondition)
+
+	Local $ret = _UIW_PropertyCondition($oUIAutomation, $UIA_AutomationIdPropertyId, $sCondition)
+	Return SetError(@error, @extended, $ret)
+
+EndFunc   ;==>_UIW_AutomationIdPropertyCondition
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_BoolCondition
+; Description ...: Creates a boolean condition for matching all or no elements
+; Syntax ........: _UIW_BoolCondition($oUIAutomation, $bValue)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $bValue              - a boolean value.
+; Return values .: Success - A pointer to the requested bool condition
+;                  Failure - False and sets @error = 1
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_BoolCondition($oUIAutomation, $bValue)
+
+	If Not IsBool($bValue) Then $bValue = StringLower($bValue) = "true"
+
+	Local $pCondition
+
+	If $bValue Then
+		$oUIAutomation.CreateTrueCondition($pCondition)
+	Else
+		$oUIAutomation.CreateFalseCondition($pCondition)
+	EndIf
+
+	; If it's not a pointer
+	If Not $pCondition Then Return SetError(_UIW_ErrorStack(1, "_UIW_BoolCondition"), 0, False)
+
+	Return $pCondition
+
+EndFunc   ;==>_UIW_BoolCondition
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_BoundingRectangle
+; Description ...: Gets the edges of a control. Useful for clicking.
+; Syntax ........: _UIW_BoundingRectangle($oControl)
+; Parameters ....: $oControl            - an object.
+; Return values .: Success - a bounding array
+;                  Failure - False and sets @error = 1
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_BoundingRectangle($oControl)
+
+	Local $aRect
+	$oControl.GetCurrentPropertyValue($UIA_BoundingRectanglePropertyId, $aRect)
+	If Not IsArray($aRect) Then Return SetError(_UIW_ErrorStack(1, "_UIW_BoundingRectangle"), 0, False)
+	Return $aRect
+
+EndFunc   ;==>_UIW_BoundingRectangle
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_ClassNameProperty
+; Description ...: Creates a class name property from the supplied string
+; Syntax ........: _UIW_ClassNameProperty($oUIAutomation, $sCondition)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $sCondition          - a string value.
+; Return values .: Success - A pointer to a class name property
+;                  Failure -
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_ClassNamePropertyCondition($oUIAutomation, $sCondition)
+
+	Local $ret = _UIW_PropertyCondition($oUIAutomation, $UIA_ClassNamePropertyId, $sCondition)
+	Return SetError(@error, @extended, $ret)
+
+EndFunc   ;==>_UIW_ClassNamePropertyCondition
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_ControlPattern
+; Description ...: Gets the value of the specified Control pattern for the control
+; Syntax ........: _UIW_ControlPattern($oControl, $iProperty)
+; Parameters ....: $oControl            - an object.
+;                  $iProperty           - an integer value.
+; Return values .: Success - the value of the Control pattern
+;                  Failure - False and sets @error:
+;                  |1 - $oControl isn't an object
+;                  |2 - COM Error: @extended is set to error
+; Author ........: Seadoggie01 - December 4, 2019
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_ControlPattern($oControl, $iProperty)
+
+	If Not __UIW_Param($oControl, "Object", "InterfaceDispatch") Then Return SetError(1, 0, False)
+	Local $iRet
+	$oControl.GetCurrentPropertyValue($iProperty, $iRet)
+	If @error Then Return SetError(2, @error, False)
+	Return $iRet
+
+EndFunc   ;==>_UIW_ControlPattern
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_ControlTypeProperty
+; Description ...:
+; Syntax ........: _UIW_ControlTypeProperty($oUIAutomation, $ControlTypeId)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $ControlTypeId       - an unknown value.
+; Return values .: None
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_ControlTypePropertyCondition($oUIAutomation, $ControlTypeId)
+
+	Local $ret = _UIW_PropertyCondition($oUIAutomation, $UIA_ControlTypePropertyId, $ControlTypeId)
+	Return SetError(@error, @extended, $ret)
+
+EndFunc   ;==>_UIW_ControlTypePropertyCondition
+
+; #FUNCTION# ====================================================================================================================
 ; Name ..........: _UIW_Create
 ; Description ...: Gets a UIAutomation object
 ; Syntax ........: _UIW_Create()
@@ -68,7 +298,7 @@ Global Const $UIW_WindowPattern[3] = [$sIID_IUIAutomationWindowPattern, $dtagIUI
 ; Return values .: Success - A UI Automation object
 ;                  Failure - False and sets @error to 1
 ; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
@@ -87,225 +317,261 @@ Func _UIW_Create()
 EndFunc   ;==>_UIW_Create
 
 ; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_RootObject
-; Description ...: Gets the UI Automation desktop object
-; Syntax ........: _UIW_RootObject($oUIAutomation)
+; Name ..........: _UIW_CreateAndCondition
+; Description ...:
+; Syntax ........: _UIW_CreateAndCondition($oUIAutomation, $pCondition1, $pCondition2)
 ; Parameters ....: $oUIAutomation       - an object.
-; Return values .: Success - the desktop object
-;                  Failure - False and sets @error:
-;                  | 1 - $oUIAutomation isn't an object
-;                  | 2 - Unable to create $oDesktop
+;                  $pCondition1         - a pointer value.
+;                  $pCondition2         - a pointer value.
+; Return values .: Success - an AndCondtion
+;                  Failure - False and Sets @error = 1
 ; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _UIW_RootObject($oUIAutomation)
+Func _UIW_CreateAndCondition($oUIAutomation, $pCondition1, $pCondition2)
 
-	If Not __UIW_Param($oUIAutomation, "Object", "InterfaceDispatch") Then
-		_UIW_ErrorStack(1, "_UIW_RootObject")
+	Local $pRetCondition
+	$oUIAutomation.CreateAndCondition($pCondition1, $pCondition2, $pRetCondition)
+	If Not $pRetCondition Then
+		_UIW_ErrorStack(1, "_UIW_CreateAndCondition")
 		Return SetError(1, 0, False)
 	EndIf
+	Return $pRetCondition
 
-	Local $pDesktop, $oDesktop
-
-	; Get the root object, a pointer to the desktop
-	$oUIAutomation.GetRootElement($pDesktop)
-	$oDesktop = ObjCreateInterface($pDesktop, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
-	If Not IsObj($oDesktop) Then
-		_UIW_ErrorStack(2, "_UIW_RootObject")
-		Return SetError(2, 0, False)
-	EndIf
-	Return $oDesktop
-
-EndFunc   ;==>_UIW_RootObject
+EndFunc   ;==>_UIW_CreateAndCondition
 
 ; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_FindFirst
-; Description ...: Finds the first child matching the condition
-; Syntax ........: _UIW_FindFirst($oParent, $vCondition)
-; Parameters ....: $oParent             - an object.
-;                  $vCondition          - a condition pointer or a string to be parsed.
-; Return values .: Success - the first object matching the condition
-;                  Failure - False and sets @error:
-;                  | 1 - $oParent isn't an object
-;                  | 2 - Can't parse string condition
-;                  | 3 - No children found matching
-;                  | 4 - COM error. @extended = COM Error
+; Name ..........: _UIW_CreateAndConditionFromArray
+; Description ...: Creates a single condition from an array of conditions
+; Syntax ........: _UIW_CreateAndConditionFromArray($oUIAutomation, $aConditions)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $aConditions         - an 0-based 1D array of conditions.
+; Return values .: a condition that includes all conditions
 ; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
+; Modified ......: January 21, 2021
+; Remarks .......: This is a cheap trick because I couldn't get it to work. It works though.
+;                  This is useful when you need many conditions to find an object.
+; Related .......: _UIW_CreateAndCondition
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_CreateAndConditionFromArray($oUIAutomation, $aConditions)
+
+	;#ToDo: Works, but check if performance benefit from using CreateAndConditionFromArray? @LarsJ
+
+	Local $pAndCondition = $aConditions[0]
+	For $i = 1 To UBound($aConditions) - 1
+		$pAndCondition = _UIW_CreateAndCondition($oUIAutomation, $pAndCondition, $aConditions[$i])
+	Next
+
+	Return $pAndCondition
+
+EndFunc   ;==>_UIW_CreateAndConditionFromArray
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_CreateOrCondition
+; Description ...:
+; Syntax ........: _UIW_CreateOrCondition($oUIAutomation, $pCondition1, $pCondition2)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $pCondition1         - a pointer value.
+;                  $pCondition2         - a pointer value.
+; Return values .: Success - an AndCondtion
+;                  Failure - False and Sets @error = 1
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _UIW_FindFirst($oParent, $vCondition)
-
-	If Not IsObj($oParent) Then
-		_UIW_ErrorStack(1, "_UIW_FindFirst")
+Func _UIW_CreateOrCondition($oUIAutomation, $pCondition1, $pCondition2)
+	Local $pRetCondition
+	$oUIAutomation.CreateOrCondition($pCondition1, $pCondition2, $pRetCondition)
+	If Not $pRetCondition Then
+		_UIW_ErrorStack(1, "_UIW_CreateAndCondition")
 		Return SetError(1, 0, False)
 	EndIf
-	$vCondition = __UIW_ParseCondition($__g_oUIAutomation, $vCondition)
-	If @error Then
-		SetError(2, @extended)
-		_UIW_ErrorStack(2, "_UIW_FindFirst")
-		Return False
-	EndIf
+	Return $pRetCondition
 
-	Local $hErr = __UIW_ErrHnd()
-	#forceref $hErr
-
-	Local $pResult
-	$oParent.FindFirst($TreeScope_Descendants, $vCondition, $pResult)
-	If @error Then
-		SetError(4, @error, False)
-		_UIW_ErrorStack(4, "_UIW_FindFirst")
-		Return False
-	EndIf
-	Local $oResult = ObjCreateInterface($pResult, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
-	If Not IsObj($oResult) Then
-		_UIW_ErrorStack(3, "_UIW_FindFirst")
-		Return SetError(3, 0, False)
-	EndIf
-	Return $oResult
-
-EndFunc   ;==>_UIW_FindFirst
+EndFunc   ;==>_UIW_CreateOrCondition
 
 ; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_FindAll
-; Description ...: Finds all elements matching the condition
-; Syntax ........: _UIW_FindAll($oParent, $vCondition)
-; Parameters ....: $oParent             - an object.
-;                  $vCondition          - a pointer value or a string to create a condtion with.
-; Return values .: Success - an array of matching elements.
-;                  Failue - False and sets @error:
-;                  | 1 - $vCondtion isn't a pointer and couldn't be parsed
-;                  | 2 - $oParent.FindAll returned no matches
-; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_FindAll($oParent, $vCondition)
-
-	$vCondition = __UIW_ParseCondition($__g_oUIAutomation, $vCondition)
-	If @error Then
-		_UIW_ErrorStack(1, "_UIW_FindAll")
-		Return SetError(1, 0, False)
-	EndIf
-
-	Local $pCollection
-	$oParent.FindAll($TreeScope_Descendants, $vCondition, $pCollection)
-	Local $oCollection = ObjCreateInterface($pCollection, $sIID_IUIAutomationElementArray, $dtagIUIAutomationElementArray)
-	If Not IsObj($oCollection) Then
-		_UIW_ErrorStack(2, "_UIW_FindAll")
-		Return SetError(2, 0, False)
-	EndIf
-	Return $oCollection
-
-EndFunc   ;==>_UIW_FindAll
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_GetCurrentPattern
-; Description ...: Gets the pattern from an element
-; Syntax ........: _UIW_GetCurrentPattern($oParent, $aPatternId)
-; Parameters ....: $oParent             - an object.
-;                  $aPatternId          - an array of unknowns.
-; Return values .: Success - the pattern object
+; Name ..........: _UIW_ElementFromPoint
+; Description ...: Gets the element underneath a point on the screen
+; Syntax ........: _UIW_ElementFromPoint($oUIAutomation, $iX, $iY)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $iX                  - an integer value.
+;                  $iY                  - an integer value.
+; Return values .: Success - the element underneath the point
 ;                  Failure - False and sets @error:
-;                  | 1 - $aPatternId isn't an array
-;                  | 2 - $oParent isn't an object
-;                  | 3 - $aPatternId is invalid for this $oParent
+;                  |3 - Unable to create element from point
 ; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
-; Remarks .......:
+; Modified ......: January 21, 2021
+; Remarks .......: Not well tested... if at all. Use caution?
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _UIW_GetCurrentPattern($oParent, $aPatternId)
+Func _UIW_ElementFromPoint($oUIAutomation, $iX, $iY)
 
-	Local $pValue, $oValue
-	If Not IsArray($aPatternId) Then
-		_UIW_ErrorStack(1, "_UIW_GetCurrentPattern")
-		Return SetError(1, 2, False)
-	EndIf
-	If Not IsObj($oParent) Then
-		_UIW_ErrorStack(2, "_UIW_GetCurrentPattern")
-		Return SetError(2, 0, False)
-	EndIf
-	$oParent.GetCurrentPattern($aPatternId[2], $pValue)
-	$oValue = ObjCreateInterface($pValue, $aPatternId[0], $aPatternId[1])
-	If Not IsObj($oValue) Then
-		_UIW_ErrorStack(3, "_UIW_GetCurrentPattern")
-		Return SetError(3, 0, False)
-	EndIf
-	Return $oValue
+	Local $tStructPoint = DllStructCreate("int x; int y")
+	DllStructSetData($tStructPoint, "x", $iX)
+	DllStructSetData($tStructPoint, "y", $iY)
 
-EndFunc   ;==>_UIW_GetCurrentPattern
+	Local $pElement
+	$oUIAutomation.GetElementFromPoint($tStructPoint, $pElement)
+
+	Local $oElement = ObjCreateInterface($pElement, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
+	If Not IsObj($oElement) Then Return SetError(3, 0, False)
+
+	Return $oElement
+
+EndFunc
 
 ; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_SetValue
-; Description ...: Sets the value of a UIAElement
-; Syntax ........: _UIW_SetValue($oElement, $sText)
+; Name ..........: _UIW_ElementProperty
+; Description ...: Gets the property of an element
+; Syntax ........: _UIW_ElementProperty($oElement, $sProperty)
 ; Parameters ....: $oElement            - an object.
-;                  $sText               - a string value.
-; Return values .: Success - True
-;                  Failure - False and sets @error
-;                  | 1 - $oControl doesn't support setting the value
-;                  | 2 - COM Error. @extended = COM Error
+;                  $sProperty           - the property name to get.
+; Return values .: Success - The requested property value
+;                  Failure - False and sets @error:
+;                  |1 - $oElement isn't an Object
+;                  |2 - Unsupported Property name
+;                  |3 - COM Error and sets @extended = COM error
 ; Author ........: Seadoggie01
-; Modified ......: November 21, 2019
+; Modified ......: January 21, 2021
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _UIW_SetValue($oElement, $sText)
+Func _UIW_ElementProperty($oElement, $sProperty)
 
-	Local $oValue = _UIW_GetCurrentPattern($oElement, $UIW_ValuePattern)
-	If @error Then Return SetError(1, 0, False)
-
+	If Not __UIW_Param($oElement, "Object", "InterfaceDispatch") Then
+		_UIW_ErrorStack(1, "_UIW_ElementProperty")
+		Return SetError(1, 0, False)
+	EndIf
+	Local $vRet = ""
 	Local $hErr = __UIW_ErrHnd()
 	#forceref $hErr
-	$oValue.SetValue($sText)
-	If @error Then
-		_UIW_ErrorStack(2, "_UIW_SetValue")
-		Return SetError(2, @error, False)
-	EndIf
-
-	Return True
-
-EndFunc   ;==>_UIW_SetValue
+	Switch StringLower($sProperty)
+		Case "acceleratorkey"
+			$oElement.CurrentAcceleratorKey($vRet)
+		Case "accesskey"
+			$oElement.CurrentAccessKey($vRet)
+		Case "ariaproperties"
+			$oElement.CurrentAriaProperties($vRet)
+		Case "ariarole"
+			$oElement.CurrentAriaRole($vRet)
+		Case "automationid"
+			$oElement.CurrentAutomationId($vRet)
+		Case "boundingrectangle"
+			$oElement.CurrentBoundingRectangle($vRet)
+		Case "classname"
+			$oElement.CurrentClassName($vRet)
+		Case "controllerfor"
+			$oElement.CurrentControllerFor($vRet)
+		Case "controltype"
+			$oElement.CurrentControlType($vRet)
+		Case "culture"
+			$oElement.CurrentCulture($vRet)
+		Case "describedby"
+			$oElement.CurrentDescribedBy($vRet)
+		Case "flowsto"
+			$oElement.CurrentFlowsTo($vRet)
+		Case "frameworkid"
+			$oElement.CurrentFrameworkId($vRet)
+		Case "haskeyboardfocus"
+			$oElement.CurrentHasKeyboardFocus($vRet)
+		Case "helptext"
+			$oElement.CurrentHelpText($vRet)
+		Case "iscontentelement"
+			$oElement.CurrentIsContentElement($vRet)
+		Case "iscontrolelement"
+			$oElement.CurrentIsControlElement($vRet)
+		Case "isdatavalidforform"
+			$oElement.CurrentIsDataValidForForm($vRet)
+		Case "isenabled"
+			$oElement.CurrentIsEnabled($vRet)
+		Case "iskeyboardfocusable"
+			$oElement.CurrentIsKeyboardFocusable($vRet)
+		Case "isoffscreen"
+			$oElement.CurrentIsOffscreen($vRet)
+		Case "ispassword"
+			$oElement.CurrentIsPassword($vRet)
+		Case "isrequiredforform"
+			$oElement.CurrentIsRequiredForForm($vRet)
+		Case "itemstatus"
+			$oElement.CurrentItemStatus($vRet)
+		Case "itemtype"
+			$oElement.CurrentItemType($vRet)
+		Case "labeledby"
+			$oElement.CurrentLabeledBy($vRet)
+		Case "localizedcontroltype"
+			$oElement.CurrentLocalizedControlType($vRet)
+		Case "name"
+			$oElement.CurrentName($vRet)
+		Case "nativewindowhandle"
+			$oElement.CurrentNativeWindowHandle($vRet)
+		Case "orientation"
+			$oElement.CurrentOrientation($vRet)
+		Case "processid"
+			$oElement.CurrentProcessId($vRet)
+		Case "providerdescription"
+			$oElement.CurrentProviderDescription($vRet)
+		Case "getcurrentpattern"
+			$oElement.GetCurrentPattern($vRet)
+		Case "getcurrentpatternas"
+			$oElement.GetCurrentPatternAs($vRet)
+		Case "getcurrentpropertyvalue"
+			$oElement.GetCurrentPropertyValue($vRet)
+		Case "getcurrentpropertyvalueex"
+			$oElement.GetCurrentPropertyValueEx($vRet)
+		Case "runtimeid"
+			$oElement.GetRuntimeId($vRet)
+		Case Else
+			Return SetError(2, 0, False)
+	EndSwitch
+	If @error Then Return SetError(3, @error, False)
+	Return $vRet
+EndFunc   ;==>_UIW_ElementProperty
 
 ; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_Invoke
-; Description ...: Invokes a control
-; Syntax ........: _UIW_Invoke($oControl)
-; Parameters ....: $oControl            - an object.
-; Return values .: Success - True
-;                  Failure - False and sets @error = 1
+; Name ..........: _UIW_ErrorStack
+; Description ...: Call this to get the stack of errors. Don't pass params to get the stack.
+; Syntax ........: _UIW_ErrorStack([$iError = 0[, $sFunction = ""]])
+; Parameters ....: $iError              - [optional] an integer value. Default is 0.
+;                  $sFunction           - [optional] a string value. Default is "".
+; Return values .: 0-Based 2D array of [Function Name, Error] in the order of occurance
 ; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......: Like clicking without the mouse
+; Modified ......: October 14, 2020
+; Remarks .......:
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _UIW_Invoke($oControl)
+Func _UIW_ErrorStack($iError = 0, $sFunction = "")
 
-	Local $oInvoke = _UIW_GetCurrentPattern($oControl, $UIW_InvokePattern)
-	If @error Then
-		_UIW_ErrorStack(1, "_UIW_SetValue")
-		Return SetError(1, 0, False)
+	Static $aErrors[0]
+	If $iError = 0 Then
+		; Copy the errors
+		Local $aRet = $aErrors
+		; Clear the error stack
+		ReDim $aErrors[0]
+		; Return the error stack
+		Return $aRet
+	Else
+		ReDim $aErrors[UBound($aErrors) + 1]
+		$aErrors[UBound($aErrors) - 1] = $sFunction & ":" & $iError
+		Return $iError
 	EndIf
-	$oInvoke.Invoke()
 
-EndFunc   ;==>_UIW_Invoke
+EndFunc   ;==>_UIW_ErrorStack
 
 ; #FUNCTION# ====================================================================================================================
 ; Name ..........: _UIW_ExpandCollapse
@@ -315,7 +581,7 @@ EndFunc   ;==>_UIW_Invoke
 ;                  $bExpand             - [optional] a boolean value. Default is True.
 ; Return values .: None
 ; Author ........: Seadoggie01
-; Modified ......: November 25, 2019
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
@@ -343,69 +609,370 @@ Func _UIW_ExpandCollapse($oControl, $bExpand = Default)
 EndFunc   ;==>_UIW_ExpandCollapse
 
 ; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_BoundingRectangle
-; Description ...:
-; Syntax ........: _UIW_BoundingRectangle($oControl)
-; Parameters ....: $oControl            - an object.
-; Return values .: Success - a bounding array
-;                  Failure - False and sets @error = 1
+; Name ..........: _UIW_FindAll
+; Description ...: Finds all elements matching the condition
+; Syntax ........: _UIW_FindAll($oParent, $vCondition[, $TreeScope = $TreeScope_Children])
+; Parameters ....: $oParent             - an object.
+;                  $vCondition          - a pointer value or a string to create a condtion with.
+;                  $TreeScope           - [optional] the scope of the search, a value of TreeScope. Default is $TreeScope_Children.
+; Return values .: Success - an array of matching elements.
+;                  Failue - False and sets @error:
+;                  | 1 - $vCondtion isn't a pointer and couldn't be parsed
+;                  | 2 - $oParent.FindAll returned no matches
+;                  | 3 - $oParent isn't an object
 ; Author ........: Seadoggie01
-; Modified ......: November 21, 2019
+; Modified ......: January 21, 2021
+; Remarks .......:
+; Related .......: _UIW_FindFirst
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_FindAll($oParent, $vCondition, $TreeScope = $TreeScope_Children)
+
+	If Not __UIW_Param($oParent, "Object", "InterfaceDispatch") Then
+		_UIW_ErrorStack(3, "_UIW_FindAll")
+		Return SetError(3, 0, False)
+	EndIf
+
+	$vCondition = __UIW_ParseCondition($__g_oUIAutomation, $vCondition)
+	If @error Then
+		_UIW_ErrorStack(1, "_UIW_FindAll")
+		Return SetError(1, 0, False)
+	EndIf
+
+	Local $pCollection
+	$oParent.FindAll($TreeScope, $vCondition, $pCollection)
+	Local $oCollection = ObjCreateInterface($pCollection, $sIID_IUIAutomationElementArray, $dtagIUIAutomationElementArray)
+	If Not IsObj($oCollection) Then Return SetError(_UIW_ErrorStack(2, "_UIW_FindAll"), 0, False)
+
+	Return __UIW_ElementArrayToArray($oCollection)
+
+EndFunc   ;==>_UIW_FindAll
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_FindFirst
+; Description ...: Finds the first child matching the condition
+; Syntax ........: _UIW_FindFirst($oParent, $vCondition[, $TreeScope = $TreeScope_Children])
+; Parameters ....: $oParent             - an object.
+;                  $vCondition          - a condition pointer or a string to be parsed.
+;                  $TreeScope           - [optional] the scope of the search, a value of TreeScope. Default is $TreeScope_Children.
+; Return values .: Success - the first object matching the condition
+;                  Failure - False and sets @error:
+;                  | 1 - $oParent isn't an object
+;                  | 2 - Can't parse string condition
+;                  | 3 - No children found matching
+;                  | 4 - Can't create object from child pointer
+;                  | 5 - COM error. @extended = COM Error
+; Author ........: Seadoggie01
+; Modified ......: January 21, 2021
+; Remarks .......:
+; Related .......: _UIW_FindAll
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_FindFirst($oParent, $vCondition, $TreeScope = Default)
+
+	If Not IsObj($oParent) Then Return SetError(_UIW_ErrorStack(1, "_UIW_FindFirst"), @error, False)
+	If IsKeyword($TreeScope) Then $TreeScope = $TreeScope_Children
+
+	$vCondition = __UIW_ParseCondition($__g_oUIAutomation, $vCondition)
+	If @error Then Return SetError(2, @extended, _UIW_ErrorStack(2, "_UIW_FindFirst"))
+
+	Local $hErr = __UIW_ErrHnd()
+	#forceref $hErr
+
+	Local $pResult
+	$oParent.FindFirst($TreeScope, $vCondition, $pResult)
+	If @error Then Return SetError(_UIW_ErrorStack(5, "_UIW_FindFirst"), @error, False)
+
+	If Not $pResult Then Return SetError(_UIW_ErrorStack(3, "_UIW_FindFirst"), @error, False)
+
+	Local $oResult = ObjCreateInterface($pResult, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
+	If Not IsObj($oResult) Then Return SetError(_UIW_ErrorStack(4, "_UIW_FindFirst"), @error, False)
+
+	Return $oResult
+
+EndFunc   ;==>_UIW_FindFirst
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_GetCurrentPattern
+; Description ...: Gets the pattern from an element
+; Syntax ........: _UIW_GetCurrentPattern($oParent, $aPatternId)
+; Parameters ....: $oParent             - an object.
+;                  $aPatternId          - an array of unknowns.
+; Return values .: Success - the pattern object
+;                  Failure - False and sets @error:
+;                  | 1 - $aPatternId isn't an array
+;                  | 2 - $oParent isn't an object
+;                  | 3 - $aPatternId is invalid for this $oParent
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _UIW_BoundingRectangle($oControl)
+Func _UIW_GetCurrentPattern($oParent, $aPatternId)
 
-	Local $aRect
-	$oControl.GetCurrentPropertyValue($UIA_BoundingRectanglePropertyId, $aRect)
-	If Not IsArray($aRect) Then
-		_UIW_ErrorStack(1, "_UIW_BoundingRectangle")
-		Return SetError(1, 0, False)
+	Local $pValue, $oValue
+	If Not IsArray($aPatternId) Then
+		_UIW_ErrorStack(1, "_UIW_GetCurrentPattern")
+		Return SetError(1, 2, False)
 	EndIf
-	Return $aRect
+	If Not IsObj($oParent) Then
+		_UIW_ErrorStack(2, "_UIW_GetCurrentPattern")
+		Return SetError(2, 0, False)
+	EndIf
+	$oParent.GetCurrentPattern($aPatternId[2], $pValue)
+	$oValue = ObjCreateInterface($pValue, $aPatternId[0], $aPatternId[1])
+	If Not IsObj($oValue) Then
+		_UIW_ErrorStack(3, "_UIW_GetCurrentPattern")
+		Return SetError(3, 0, False)
+	EndIf
+	Return $oValue
 
-EndFunc   ;==>_UIW_BoundingRectangle
+EndFunc   ;==>_UIW_GetCurrentPattern
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_Invoke
+; Description ...: Invokes a control
+; Syntax ........: _UIW_Invoke($oControl)
+; Parameters ....: $oControl            - an object.
+; Return values .: Success - True
+;                  Failure - False and sets @error = 1
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......: Like clicking without the mouse
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_Invoke($oControl)
+
+	Local $oInvoke = _UIW_GetCurrentPattern($oControl, $UIW_InvokePattern)
+	If @error Then Return SetError(_UIW_ErrorStack(1, "_UIW_SetValue"), 0, False)
+	$oInvoke.Invoke()
+
+EndFunc   ;==>_UIW_Invoke
+
+Func _UIW_LegacyIAccessibleStatePropertyCondition($oUIAutomation, $sCondition)
+
+	Local $ret = _UIW_PropertyCondition($oUIAutomation, $UIA_LegacyIAccessibleStatePropertyId, $sCondition)
+	Return SetError(@error, @extended, $ret)
+
+EndFunc   ;==>_UIW_LegacyIAccessibleStatePropertyCondition
+
+Func _UIW_LegacyIAccessibleSelect($oControl)
+
+	Local $oSelect = _UIW_GetCurrentPattern($oControl, $UIW_LegacyIAccessiblePattern)
+	If @error Then Return SetError(1, 0, False)
+
+	$oSelect.Select(0x8)
+
+EndFunc
 
 ; #FUNCTION# ====================================================================================================================
 ; Name ..........: _UIW_MouseClick
 ; Description ...: Clicks on a control using the bounding rectange with $sButton
 ; Syntax ........: _UIW_MouseClick($oControl[, $sButton = Default[, $bBounce = Default]])
 ; Parameters ....: $oControl            - an object.
-;                  $sButton             - [optional] a string value. Default is "left".
-;                  $bBounce             - [optional] a boolean value. Default is True.
+;                  $sButton             - [optional] button to click with. Default is "left".
+;                  $bBounce             - [optional] True to move mouse and return when finished. Default is True.
 ; Return values .: Success - True
 ;                  Failure - False and sets @error
 ;                  | 1 - Unable to get bounding rectange
-; Author ........: LarsJ
-; Modified ......: Seadoggie01 - November 25, 2019
-; Remarks .......: I created a personal mouse click bounce function which had an option for which button to use... I copied _
-;                    LarJ's idea for hidding the mouse. This is a modification of both of our functions.
+; Author ........: LarsJ, Seadoggie01
+; Modified ......: January 21, 2021
+; Remarks .......: I created a mouse click bounce function which had an option for which button to use... I copied
+;                + LarJ's idea for hidding the mouse. This is a modification of both of our functions.
+;                  It seems to not work in some locations on a multi-monitor setup (mine uses two differently sized screens)
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
 Func _UIW_MouseClick($oControl, $sButton = Default, $bBounce = Default)
 
-	If $sButton = Default Then $sButton = "left"
-	If $bBounce = Default Then $bBounce = True
+	If IsKeyword($sButton) Then $sButton = "left"
+	If IsKeyword($bBounce) Then $bBounce = True
 
+	; Get the edges of the control
 	Local $aBounds = _UIW_BoundingRectangle($oControl)
-	If @error Then
-		_UIW_ErrorStack("_UIW_MouseClick", 1)
-		Return SetError(1, 0, False)
-	EndIf
+	If @error Then Return SetError(_UIW_ErrorStack("_UIW_MouseClick", 1), 0, False)
 
-	_UIW_SetFocus($oControl)
-
-	DllCall("user32.dll", "int", "ShowCursor", "bool", False)
+	; get the mouse's current position
 	Local $aMousePos = MouseGetPos()
+
+	; Hide the mouse
+	DllCall("user32.dll", "int", "ShowCursor", "bool", False)
+	; Trap the mouse at the specified location
+	__UIW_MouseTrap($aBounds[0] + $aBounds[2] / 2, $aBounds[1] + $aBounds[3] / 2, $aBounds[0] + $aBounds[2] / 2, $aBounds[1] + $aBounds[3] / 2)
+	; Perform the click
 	MouseClick($sButton, $aBounds[0] + $aBounds[2] / 2, $aBounds[1] + $aBounds[3] / 2, 1, 0)
+	; Release the trap
+	__UIW_MouseTrap()
+	; Move the mouse back
 	If $bBounce Then MouseMove($aMousePos[0], $aMousePos[1], 0)
+	; Show the mouse
 	DllCall("user32.dll", "int", "ShowCursor", "bool", True)
 
+	Return True
+
 EndFunc   ;==>_UIW_MouseClick
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_NameProperty
+; Description ...:
+; Syntax ........: _UIW_NameProperty($oUIAutomation, $sCondition)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $sCondition          - a string value.
+; Return values .: None
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_NamePropertyCondition($oUIAutomation, $sCondition)
+
+	Local $ret = _UIW_PropertyCondition($oUIAutomation, $UIA_NamePropertyId, $sCondition)
+	Return SetError(@error, @extended, $ret)
+
+EndFunc   ;==>_UIW_NamePropertyCondition
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_ParseCondition
+; Description ...: Depreciated
+; Syntax ........:
+; Parameters ....:
+; Return values .:
+; Author ........: Seadoggie01
+; Modified ......: November 16, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_ParseCondition($oUIAutomation, $sProperties)
+
+	#forceref $oUIAutomation
+	__UIW_Debug("_UIW_ParseCondition: Depreciated Function! Pass properties string directly from now on.", "---> ")
+	Return $sProperties
+
+EndFunc   ;==>_UIW_ParseCondition
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_ParseObject
+; Description ...: Depreciated
+; Syntax ........:
+; Parameters ....:
+; Return values .:
+; Author ........: Seadoggie01
+; Modified ......: November 16, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_ParseObject($oUIAutomation, $oParent, $sProperties)
+	#forceref $oUIAutomation, $oParent
+	__UIW_Debug("_UIW_ParseObject: Depreciated function! Replace with _UIW_FindFirst()", "---> ")
+	Return $sProperties
+
+EndFunc   ;==>_UIW_ParseObject
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_PropertyCondition
+; Description ...: Creates a property condition
+; Syntax ........: _UIW_PropertyCondition($oUIAutomation, $UIA_PropertyId, $vCondition)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $UIA_PropertyId      - a Property ID, see module UIA_PropertyIds in CUIAutomation2.
+;                  $vCondition          - a variant value.
+; Return values .: Success - a pointer to the condition requested
+;                  Failure - False and sets @error:
+;                  |1 - Unable to create property condition, @extended set to COM error.
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_PropertyCondition($oUIAutomation, $UIA_PropertyId, $vCondition)
+
+	Local $pCondition
+	$oUIAutomation.CreatePropertyCondition($UIA_PropertyId, $vCondition, $pCondition)
+	If $pCondition Then Return $pCondition
+	Return SetError(_UIW_ErrorStack(1, "_UIW_PropertyCondition - UIA Property: " & $UIA_PropertyId), @extended, False)
+
+EndFunc   ;==>_UIW_PropertyCondition
+
+Func _UIW_RawViewWalker($oUIAutomation)
+
+	Local $pRawViewWalker
+	$oUIAutomation.RawViewWalker($pRawViewWalker)
+	Local $oTreeView = ObjCreateInterface($pRawViewWalker, $sIID_IUIAutomationTreeWalker, $dtagIUIAutomationTreeWalker)
+	If Not IsObj($oTreeView) Then Return SetError(_UIW_ErrorStack(1, "_UIW_RawViewWalker"), 0, False)
+	Return $oTreeView
+
+EndFunc   ;==>_UIW_RawViewWalker
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_RootObject
+; Description ...: Gets the UI Automation desktop object
+; Syntax ........: _UIW_RootObject($oUIAutomation)
+; Parameters ....: $oUIAutomation       - an object.
+; Return values .: Success - the desktop object
+;                  Failure - False and sets @error:
+;                  | 1 - $oUIAutomation isn't an object
+;                  | 2 - Unable to create $oDesktop
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_RootObject($oUIAutomation)
+
+	If Not __UIW_Param($oUIAutomation, "Object", "InterfaceDispatch") Then Return SetError(_UIW_ErrorStack(1, "_UIW_RootObject"), 0, False)
+
+	Local $pDesktop, $oDesktop
+
+	; Get the root object, a pointer to the desktop
+	$oUIAutomation.GetRootElement($pDesktop)
+	$oDesktop = ObjCreateInterface($pDesktop, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
+	If Not IsObj($oDesktop) Then
+		_UIW_ErrorStack(2, "_UIW_RootObject")
+		Return SetError(2, 0, False)
+	EndIf
+	Return $oDesktop
+
+EndFunc   ;==>_UIW_RootObject
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _UIW_Select
+; Description ...: Selects a control
+; Syntax ........: _UIW_Select($oControl)
+; Parameters ....: $oControl            - an object.
+; Return values .: None
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _UIW_Select($oControl)
+
+	Local $oSelect = _UIW_GetCurrentPattern($oControl, $UIW_SelectionItemPattern)
+	If @error Then
+		_UIW_ErrorStack(1, "_UIW_Select")
+		Return SetError(1, 0, False)
+	EndIf
+	$oSelect.Select()
+
+EndFunc   ;==>_UIW_Select
 
 ; #FUNCTION# ====================================================================================================================
 ; Name ..........: _UIW_SetFocus
@@ -415,7 +982,7 @@ EndFunc   ;==>_UIW_MouseClick
 ; Return values .: Success - True
 ;                  Failure - False and sets @error = 1
 ; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
@@ -431,80 +998,49 @@ Func _UIW_SetFocus($oElement)
 EndFunc   ;==>_UIW_SetFocus
 
 ; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_ParseCondition
-; Description ...: Depreciated
-; Syntax ........:
-; Parameters ....:
-; Return values .:
+; Name ..........: _UIW_SetValue
+; Description ...: Sets the value of a UIAElement
+; Syntax ........: _UIW_SetValue($oElement, $sText)
+; Parameters ....: $oElement            - an object.
+;                  $sText               - a string value.
+; Return values .: Success - True
+;                  Failure - False and sets @error
+;                  | 1 - $oControl doesn't support setting the value
+;                  | 2 - COM Error. @extended = COM Error
 ; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _UIW_ParseCondition($oUIAutomation, $sProperties)
+Func _UIW_SetValue($oElement, $sText)
 
-	Debug("Depreciated Function! Pass properties string directly from now on.", "---> ")
-	Local $ret = __UIW_ParseCondition($oUIAutomation, $sProperties)
-	Return SetError(@error, @extended, $ret)
+	Local $oValue = _UIW_GetCurrentPattern($oElement, $UIW_ValuePattern)
+	If @error Then Return SetError(1, 0, False)
 
-EndFunc   ;==>_UIW_ParseCondition
+	Local $hErr = __UIW_ErrHnd()
+	#forceref $hErr
+	$oValue.SetValue($sText)
+	If @error Then Return SetError(_UIW_ErrorStack(2, "_UIW_SetValue"), @error, False)
 
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_ParseObject
-; Description ...: Depreciated
-; Syntax ........:
-; Parameters ....:
-; Return values .:
-; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_ParseObject($oUIAutomation, $oParent, $sProperties)
-	#forceref $oUIAutomation
-	Debug("Depreciated function! Replace with _UIW_FindFirst()", "---> ")
+	Return True
 
-	; Pass commands to UIW Find First and return everything the same
-	Local $ret = _UIW_FindFirst($oParent, $sProperties)
-	Return SetError(@error, @extended, $ret)
+EndFunc   ;==>_UIW_SetValue
 
-EndFunc   ;==>_UIW_ParseObject
+Func _UIW_GetValue($oElement)
 
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_ErrorStack
-; Description ...: Call this to get the stack of errors. Don't pass params to get the stack.
-; Syntax ........: _UIW_ErrorStack([$iError = 0[, $sFunction = ""]])
-; Parameters ....: $iError              - [optional] an integer value. Default is 0.
-;                  $sFunction           - [optional] a string value. Default is "".
-; Return values .: 0-Based 2D array [Function Name, Error]
-; Author ........: Seadoggie01
-; Modified ......: November 8, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_ErrorStack($iError = 0, $sFunction = "")
+;~ 	Local $oValue = _UIW_GetCurrentPattern($oElement, $UIW_ValuePatternId)
+;~ 	If @error Then Return SetError(1, 0, False)
+	Local $sValue
+	$oElement.GetCurrentPropertyValue($UIA_ValueValuePropertyId, $sValue)
+	Return $sValue
 
-	Static $aErrors[0]
-	If $iError = 0 Then
-		; Copy the errors
-		Local $aRet = $aErrors
-		; Clear the error stack
-		ReDim $aErrors[0]
-		; Return the error stack
-		Return $aRet
-	Else
-		ReDim $aErrors[UBound($aErrors) + 1]
-		$aErrors[UBound($aErrors) - 1] = $sFunction & ":" & $iError
-		Return SetError($iError)
-	EndIf
+EndFunc
 
-EndFunc   ;==>_UIW_ErrorStack
+#Region ### Tree Walker Code ###
+
+; Use at your own risk, I don't think it works!
 
 ; #FUNCTION# ====================================================================================================================
 ; Name ..........: _UIW_TreeWalkerCreate
@@ -517,7 +1053,7 @@ EndFunc   ;==>_UIW_ErrorStack
 ;                  | 1 - $vCondtion isn't a pointer and couldn't be parsed
 ;                  | 2 - Can't create tree walker from pointer
 ; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
@@ -526,412 +1062,254 @@ EndFunc   ;==>_UIW_ErrorStack
 Func _UIW_TreeWalkerCreate($oUIAutomation, $vCondition)
 
 	$vCondition = __UIW_ParseCondition($oUIAutomation, $vCondition)
-	If @error Then
-		_UIW_ErrorStack(1, "_UIW_TreeWalkerCreate")
-		Return SetError(1, 0, False)
-	EndIf
+	If @error Then Return SetError(_UIW_ErrorStack(1, "_UIW_TreeWalkerCreate"), 0, False)
 
 	Local $oWalker
 	$oUIAutomation.RawViewWalker($vCondition)
 	$oWalker = ObjCreateInterface($vCondition, $sIID_IUIAutomationTreeWalker, $dtagIUIAutomationTreeWalker)
-	If Not IsObj($oWalker) Then
-		_UIW_ErrorStack(2, "_UIW_CreateTreeWalker")
-		Return SetError(2, 0, False)
-	EndIf
+	If Not IsObj($oWalker) Then Return SetError(_UIW_ErrorStack(2, "_UIW_CreateTreeWalker"), 0, False)
+
 	Return $oWalker
 
-EndFunc   ;==>_UIW_CreateTreeWalker
+EndFunc   ;==>_UIW_TreeWalkerCreate
+
+Func _UIW_TreeWalkerGetAll($oWalker, $vCondition)
+
+	If Not __UIW_Param($oWalker, "Object", "InterfaceDispatch") Then
+		_UIW_ErrorStack(1, "_UIW_TreeWalkerGetFirst")
+		Return SetError(1, 0, False)
+	EndIf
+
+	$vCondition = __UIW_ParseCondition($__g_oUIAutomation, $vCondition)
+	If @error Then
+		SetError(2, @extended)
+		_UIW_ErrorStack(2, "_UIW_TreeWalkerGetFirst")
+		Return False
+	EndIf
+
+EndFunc   ;==>_UIW_TreeWalkerGetAll
 
 ; #FUNCTION# ====================================================================================================================
 ; Name ..........: _UIW_TreeWalkerGetFirst
 ; Description ...: Gets the first matching element
-; Syntax ........: _UIW_TreeWalkerGetFirst($oWalker, $oControl, $pCondition)
+; Syntax ........: _UIW_TreeWalkerGetFirst($oWalker, $oControl, $vCondition)
 ; Parameters ....: $oWalker             - a Tree walker object.
 ;                  $oControl            - the object to search in.
-;                  $pCondition          - the condition to match.
+;                  $vCondition          - the condition to match.
 ; Return values .: Success - the first child object matching the condition
 ;                  Failure - False and sets @error:
 ;                  | 1 - COM Error sets @extended to COM Error
 ; Author ........: Seadoggie01
-; Modified ......: November 25, 2019
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _UIW_TreeWalkerGetFirst($oWalker, $oControl, $pCondition)
+Func _UIW_TreeWalkerGetFirst($oWalker, $oControl)
 
-	Local $ret = $oWalker.GetFirstChildElement($oControl, $pCondition)
-	If @error Then
-		SetError(1, @error)
-		_UIW_ErrorStack(2, "_UIW_TreeWalkerGetFirst")
-		Return False
-	EndIf
-	Return $ret
+	If Not __UIW_Param($oWalker, "Object", "InterfaceDispatch") Then Return SetError(_UIW_ErrorStack(1, "_UIW_TreeWalkerGetFirst"), 0, False)
+
+	Local $pElement
+	$oWalker.GetFirstChildElement($oControl, $pElement)
+	If @error Then Return SetError(_UIW_ErrorStack(2, "_UIW_TreeWalkerGetFirst"), @error, False)
+
+	If Not $pElement Then Return SetError(_UIW_ErrorStack(3, "_UIW_TreeWalkerGetFirst"), @error, False)
+
+	Local $oResult = ObjCreateInterface($pElement, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
+	If Not IsObj($oResult) Then Return SetError(_UIW_ErrorStack(4, "_UIW_TreeWalkerGetFirst"), @error, False)
+
+	Return $oResult
 
 EndFunc   ;==>_UIW_TreeWalkerGetFirst
 
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_ElementProperty
-; Description ...: Gets the property of an element
-; Syntax ........: _UIW_ElementProperty($oElement, $sProperty)
-; Parameters ....: $oElement            - an object.
-;                  $sProperty           - the property name to get.
-; Return values .: Success - The requested property value
-;                  Failure - False and sets @error:
-;                  | 1 - Unsupported Property name
-;                  | 2 - COM Error and sets @extended = COM error
-; Author ........: Seadoggie01
-; Modified ......: November 21, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_ElementProperty($oElement, $sProperty)
-	Local $vRet = ""
-	Local $hErr = __UIW_ErrHnd()
-	#forceref $hErr
-	Switch StringLower($sProperty)
-		Case "name"
-			$oElement.CurrentName($vRet)
-		Case "value"
-			$oElement.CurrentValue($vRet)
-		Case Else
-			Return SetError(1, 0, False)
-	EndSwitch
-	If @error Then Return SetError(2, @error, False)
-	Return $vRet
-EndFunc   ;==>_UIW_ElementProperty
+Func _UIW_TreeWalkerGetNext($oWalker, $oControl)
 
-#Region ### Conditions ###
+	If Not __UIW_Param($oWalker, "Object", "InterfaceDispatch") Then Return SetError(_UIW_ErrorStack(1, "_UIW_TreeWalkerGetNext"), 0, False)
 
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_BoolCondition
-; Description ...: Creates a boolean condition for matching all or no elements
-; Syntax ........: _UIW_BoolCondition($oUIAutomation, $bValue)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $bValue              - a boolean value.
-; Return values .: Success - A pointer to the requested bool condition
-;                  Failure - False and sets @error = 1
-; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_BoolCondition($oUIAutomation, $bValue)
+	Local $pElement
+	$oWalker.GetNextSiblingElement($oControl, $pElement)
+	If @error Then Return SetError(_UIW_ErrorStack(2, "_UIW_TreeWalkerGetNext"), @error, False)
 
-	Local $pCondition
+	If Not $pElement Then Return SetError(_UIW_ErrorStack(3, "_UIW_TreeWalkerGetNext"), @error, False)
 
-	If $bValue Then
-		$oUIAutomation.CreateTrueCondition($pCondition)
-	Else
-		$oUIAutomation.CreateFalseCondition($pCondition)
+	Local $oResult = ObjCreateInterface($pElement, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
+	If Not IsObj($oResult) Then Return SetError(_UIW_ErrorStack(4, "_UIW_TreeWalkerGetNext"), @error, False)
+
+	If $oResult = Null Then
+		__UIW_Debug("Null!")
+		Return SetError(_UIW_ErrorStack(5, "_UIW_TreeWalkerGetNext"), 0, False)
 	EndIf
 
-	; If it's not a pointer
-	If Not IsPtr($pCondition) Then
-		Return SetError(1, 0, False)
-	EndIf
+	Return $oResult
 
-	Return $pCondition
+EndFunc   ;==>_UIW_TreeWalkerGetNext
 
-EndFunc   ;==>_UIW_BoolCondition
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_AccessKeyPropery
-; Description ...:
-; Syntax ........: _UIW_AccessKeyPropery($oUIAutomation, $sCondition)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $sCondition          - a string value.
-; Return values .: None
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_AccessKeyProperyCondition($oUIAutomation, $sCondition)
-
-	Local $ret = __UIW_PropertyCondition($oUIAutomation, $UIA_AccessKeyPropertyId, $sCondition)
-	Return SetError(@error, @extended, $ret)
-
-EndFunc   ;==>_UIW_AccessKeyPropery
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_AcceleratorKey
-; Description ...:
-; Syntax ........: _UIW_AcceleratorKey($oUIAutomation, $sCondition)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $sCondition          - a string value.
-; Return values .: None
-; Author ........: Seadoggie01
-; Modified ......:
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_AcceleratorKeyPropertyCondition($oUIAutomation, $sCondition)
-
-	Local $ret = __UIW_PropertyCondition($oUIAutomation, $UIA_AcceleratorKeyPropertyId, $sCondition)
-	Return SetError(@error, @extended, $ret)
-
-EndFunc
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_ClassNameProperty
-; Description ...: Creates a class name property from the supplied string
-; Syntax ........: _UIW_ClassNameProperty($oUIAutomation, $sCondition)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $sCondition          - a string value.
-; Return values .: Success - A pointer to a class name property
-;                  Failure -
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_ClassNamePropertyCondition($oUIAutomation, $sCondition)
-
-	Local $ret = __UIW_PropertyCondition($oUIAutomation, $UIA_ClassNamePropertyId, $sCondition)
-	Return SetError(@error, @extended, $ret)
-
-EndFunc   ;==>_UIW_ClassNameProperty
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_AutomationIdProperty
-; Description ...:
-; Syntax ........: _UIW_AutomationIdProperty($oUIAutomation, $sCondition)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $sCondition          - a string value.
-; Return values .: None
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_AutomationIdPropertyCondition($oUIAutomation, $sCondition)
-
-	Local $ret = __UIW_PropertyCondition($oUIAutomation, $UIA_AutomationIdPropertyId, $sCondition)
-	Return SetError(@error, @extended, $ret)
-
-EndFunc   ;==>_UIW_AutomationIdProperty
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_NameProperty
-; Description ...:
-; Syntax ........: _UIW_NameProperty($oUIAutomation, $sCondition)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $sCondition          - a string value.
-; Return values .: None
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_NamePropertyCondition($oUIAutomation, $sCondition)
-
-	Local $ret = __UIW_PropertyCondition($oUIAutomation, $UIA_NamePropertyId, $sCondition)
-	Return SetError(@error, @extended, $ret)
-
-EndFunc   ;==>_UIW_NameProperty
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_ControlTypeProperty
-; Description ...:
-; Syntax ........: _UIW_ControlTypeProperty($oUIAutomation, $ControlTypeId)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $ControlTypeId       - an unknown value.
-; Return values .: None
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_ControlTypePropertyCondition($oUIAutomation, $ControlTypeId)
-
-	Local $ret = __UIW_PropertyCondition($oUIAutomation, $UIA_ControlTypePropertyId, $ControlTypeId)
-	Return SetError(@error, @extended, $ret)
-
-EndFunc   ;==>_UIW_ControlTypeProperty
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_CreateOrCondition
-; Description ...:
-; Syntax ........: _UIW_CreateOrCondition($oUIAutomation, $pCondition1, $pCondition2)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $pCondition1         - a pointer value.
-;                  $pCondition2         - a pointer value.
-; Return values .: Success - an AndCondtion
-;                  Failure - False and Sets @error = 1
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_CreateOrCondition($oUIAutomation, $pCondition1, $pCondition2)
-	Local $pRetCondition
-	$oUIAutomation.CreateOrCondition($pCondition1, $pCondition2, $pRetCondition)
-	If Not $pRetCondition Then
-		_UIW_ErrorStack(1, "_UIW_CreateAndCondition")
-		Return SetError(1, 0, False)
-	EndIf
-	Return $pRetCondition
-
-EndFunc   ;==>_UIW_CreateAndCondition
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_CreateAndCondition
-; Description ...:
-; Syntax ........: _UIW_CreateAndCondition($oUIAutomation, $pCondition1, $pCondition2)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $pCondition1         - a pointer value.
-;                  $pCondition2         - a pointer value.
-; Return values .: Success - an AndCondtion
-;                  Failure - False and Sets @error = 1
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_CreateAndCondition($oUIAutomation, $pCondition1, $pCondition2)
-
-	Local $pRetCondition
-	$oUIAutomation.CreateAndCondition($pCondition1, $pCondition2, $pRetCondition)
-	If Not $pRetCondition Then
-		_UIW_ErrorStack(1, "_UIW_CreateAndCondition")
-		Return SetError(1, 0, False)
-	EndIf
-	Return $pRetCondition
-
-EndFunc   ;==>_UIW_CreateAndCondition
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _UIW_CreateAndConditionFromArray
-; Description ...:
-; Syntax ........: _UIW_CreateAndConditionFromArray($oUIAutomation, $aConditions)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $aConditions         - an array of unknowns.
-; Return values .: None
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _UIW_CreateAndConditionFromArray($oUIAutomation, $aConditions)
-
-	#TODO: Works, but check if this is okay. Performance benefit from using CreateAndConditionFromArray?
-
-	Local $pAndCondition = $aConditions[0]
-	For $i = 1 To UBound($aConditions) - 1
-		$pAndCondition = _UIW_CreateAndCondition($oUIAutomation, $pAndCondition, $aConditions[$i])
-	Next
-
-	Return $pAndCondition
-
-EndFunc   ;==>_UIW_CreateAndConditionFromArray
-
-#EndRegion ### Conditions ###
+#EndRegion ### Tree Walker Code ###
 
 #Region #INTERNAL_USE_ONLY# =====================================================================================================
 
 ; #INTERNAL_USE_ONLY# ===========================================================================================================
-; Name ..........: __UIW_PropertyCondition
-; Description ...: Creates a Property Condition
-; Syntax ........: __UIW_PropertyCondition($oUIAutomation, $UIA_PROPERTY, $sCondition)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $UIA_PROPERTY        - an unknown value.
-;                  $sCondition          - a string value.
-; Return values .: Success - A pointer to a condition of $UIA_PROPERTY type
-;                  Failure - False and sets @error = 1
-; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func __UIW_PropertyCondition($oUIAutomation, $UIA_PROPERTY, $vCondition)
-
-	Local $pCondition
-	$oUIAutomation.CreatePropertyCondition($UIA_PROPERTY, $vCondition, $pCondition)
-	If $pCondition Then Return $pCondition
-	_UIW_ErrorStack("__UIW_PropertyCondition - UIA Property: " & $UIA_PROPERTY, 1)
-	Return SetError(1, 0, False)
-
-EndFunc   ;==>__UIW_PropertyCondition
-
-; #INTERNAL_USE_ONLY# ========================f===================================================================================
-; Name ..........: __UIW_ParseProperty
-; Description ...: Takes a single property as a string and parses it to get that type of property conidtion
-; Syntax ........: __UIW_ParseProperty($oUIAutomation, $sProperty)
-; Parameters ....: $oUIAutomation       - an object.
-;                  $sProperty           - a string value.
-; Return values .: Success - $pCondition
+; Name ..........: __UIW_ElementArrayToArray
+; Description ...: Converts a IUIElementArray to an AutoIt array
+; Syntax ........: __UIW_ElementArrayToArray($oElementArray)
+; Parameters ....: $oElementArray       - an object.
+; Return values .: Success - A 1D 0-based array of the UIElements from the Element Array
 ;                  Failure - False and sets @error:
-;                  | 1  - individual property condition error
-;                  | 42 - unparseable
+;                  |1 - Length property isn't supported. @extended is set to COM error
+;                  |2 - GetElement failed. @extended is set to array index.
 ; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
+; Modified ......: October 14, 2020
+; Remarks .......: Uses IUIAutomationElementArray::get_Length and IUIAutomationElementArray::GetElement
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func __UIW_ElementArrayToArray($oElementArray)
+
+	Local $hErr = __UIW_ErrHnd()
+	#forceref $hErr
+
+	If Not IsObj($oElementArray) Then Return SetError(1, 0, False)
+
+	Local $iTemp, $pTemp, $oTemp
+	$oElementArray.Length($iTemp)
+	If @error Then Return SetError(1, @error, False)
+	Local $aReturn[$iTemp]
+	For $i = 0 To $iTemp - 1
+		$oElementArray.GetElement($i, $pTemp)
+		If @error Then Return SetError(@error, $i, False)
+		$oTemp = ObjCreateInterface($pTemp, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
+		$aReturn[$i] = $oTemp
+	Next
+	Return $aReturn
+
+EndFunc   ;==>__UIW_ElementArrayToArray
+
+; #INTERNAL_USE_ONLY# ===========================================================================================================
+; Name ..........: __UIW_ErrHnd
+; Description ...: Creates an error handler
+; Syntax ........: __UIW_ErrHnd()
+; Parameters ....: None
+; Return values .: An error handler
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
 ; Remarks .......:
 ; Related .......:
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func __UIW_ParseProperty($oUIAutomation, $sProperty)
+Func __UIW_ErrHnd()
+	Return ObjEvent("AutoIt.Error", "__UIW_ErrorHandler")
+	; 	Copy to add error handler to function
+;~ 	Local $hErr = __UIW_ErrHnd()
+;~ 	#forceref $hErr
+EndFunc   ;==>__UIW_ErrHnd
 
-	Local $sPropertyName = StringSplit($sProperty, ":", 3)[0]
-	Local $sPropertyValue = StringSplit($sProperty, ":", 3)[1]
+; #INTERNAL_USE_ONLY# ===========================================================================================================
+; Name ..........: __UIW_ErrorHandler
+; Description ...: Handles an error around suspect functions
+; Syntax ........: __UIW_ErrorHandler($oError)
+; Parameters ....: $oError              - an object.
+; Return values .: Sets @error to COM error
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......: I think this is a modified version of Water's error handler
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func __UIW_ErrorHandler($oError)
+	#forceref $oError
+	ConsoleWrite("! ---- UI Simple Wrapper COM Error ---- !" & @CRLF & _
+			"COM Error Encountered in " & @ScriptName & @CRLF & _
+			"@AutoItVersion = " & @AutoItVersion & @CRLF & _
+			"@AutoItX64 = " & @AutoItX64 & @CRLF & _
+			"@Compiled = " & @Compiled & @CRLF & _
+			"@OSArch = " & @OSArch & @CRLF & _
+			"@OSVersion = " & @OSVersion & @CRLF & _
+			"Scriptline = " & $oError.scriptline & @CRLF & _
+			"NumberHex = " & Hex($oError.number, 8) & @CRLF & _
+			"Number = " & $oError.number & @CRLF & _
+			"WinDescription = " & StringStripWS($oError.WinDescription, 2) & @CRLF & _
+			"Description = " & StringStripWS($oError.Description, 2) & @CRLF & _
+			"Source = " & $oError.Source & @CRLF & _
+			"HelpFile = " & $oError.HelpFile & @CRLF & _
+			"HelpContext = " & $oError.HelpContext & @CRLF & _
+			"LastDllError = " & $oError.LastDllError & @CRLF & _
+			"! -------------------------- !" & @CRLF & @CRLF)
+EndFunc   ;==>__UIW_ErrorHandler
 
-	; Unescape all the characters!
-	$sPropertyValue = StringReplace($sPropertyValue, "\\", "\")
-	$sPropertyValue = StringReplace($sPropertyValue, "\;", ";")
-	$sPropertyValue = StringReplace($sPropertyValue, "\:", ":")
+; #INTERNAL_USE_ONLY# ===========================================================================================================
+; Name ..........: __UIW_MouseTrap
+; Description ...: Causes the mouse to not be able to leave a rectangle.
+; Syntax ........: __UIW_MouseTrap([$iLeft = 0[, $iTop = 0[, $iRight = 0[, $iBottom = 0]]]])
+; Parameters ....: $iLeft               - [optional] an integer value. Default is 0.
+;                  $iTop                - [optional] an integer value. Default is 0.
+;                  $iRight              - [optional] an integer value. Default is 0.
+;                  $iBottom             - [optional] an integer value. Default is 0.
+; Return values .: None
+; Author ........: Gary Frost (gafrost)
+; Modified ......: October 14, 2020
+; Remarks .......: I use this internally when an object must be clicked and I don't want user interaction to mess with the click
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func __UIW_MouseTrap($iLeft = 0, $iTop = 0, $iRight = 0, $iBottom = 0)
+	Local $aReturn = 0
+	If $iLeft = Default Then $iLeft = 0
+	If $iTop = Default Then $iTop = 0
+	If $iRight = Default Then $iRight = 0
+	If $iBottom = Default Then $iBottom = 0
+	If @NumParams = 0 Then
+		$aReturn = DllCall("user32.dll", "bool", "ClipCursor", "ptr", 0)
+		If @error Or Not $aReturn[0] Then Return SetError(1, 0, False)
+	Else
+		If @NumParams = 2 Then
+			$iRight = $iLeft + 1
+			$iBottom = $iTop + 1
+		EndIf
+		Local $tagRECT = "struct;long Left;long Top;long Right;long Bottom;endstruct"
+		Local $tRECT = DllStructCreate($tagRECT)
+		DllStructSetData($tRECT, "Left", $iLeft)
+		DllStructSetData($tRECT, "Top", $iTop)
+		DllStructSetData($tRECT, "Right", $iRight)
+		DllStructSetData($tRECT, "Bottom", $iBottom)
+		$aReturn = DllCall("user32.dll", "bool", "ClipCursor", "struct*", $tRECT)
+		If @error Or Not $aReturn[0] Then Return SetError(2, 0, False)
+	EndIf
+	Return True
+EndFunc   ;==>__UIW_MouseTrap
 
+; #INTERNAL_USE_ONLY# ===========================================================================================================
+; Name ..........: __UIW_Param
+; Description ...: Checks that a variable is the correct type and the name if it's an object
+; Syntax ........: __UIW_Param($vParam, $sType[, $sObjName = Default])
+; Parameters ....: $vParam              - a variant value.
+;                  $sType               - a string value.
+;                  $sObjName            - [optional] a string value. Default is Default.
+; Return values .: True if the variable is the correct type and name, otherwise false
+; Author ........: Seadoggie01
+; Modified ......: October 14, 2020
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func __UIW_Param($vParam, $sType, $sObjName = Default)
 
-;~ 	Debug($sPropertyName & "|" & $sPropertyValue)
-	Local $vTemp
-	Switch StringLower($sPropertyName)
-		Case "type"
-			$vTemp = _UIW_ControlTypeProperty($oUIAutomation, Number($sPropertyValue))
-		Case "class"
-			$vTemp = _UIW_ClassNameProperty($oUIAutomation, $sPropertyValue)
-		Case "name"
-			$vTemp = _UIW_NameProperty($oUIAutomation, $sPropertyValue)
-		Case "id"
-			$vTemp = _UIW_AutomationIdProperty($oUIAutomation, $sPropertyValue)
-		Case "accesskey"
-			$vTemp = _UIW_AccessKeyPropery($oUIAutomation, $sPropertyValue)
-		Case "bool"
-			$vTemp = _UIW_BoolCondition($oUIAutomation, $sPropertyValue)
-		Case "acceleratorkey"
-			$vTemp = _UIW_AcceleratorKeyPropertyCondition($oUIAutomation, $sPropertyValue)
-		Case Else
-			_UIW_ErrorStack("__UIW_ParseProperty", -1)
-			Return SetError(-1, 0, False)
-	EndSwitch
+	If VarGetType($vParam) = $sType Then
+		If $sType = "Object" Then
+			Return ObjName($vParam) = $sObjName
+		Else
+			Return True
+		EndIf
+	Else
+		Return False
+	EndIf
 
-	Return SetError(@error, @extended, $vTemp)
-
-EndFunc   ;==>__UIW_ParseProperty
+EndFunc   ;==>__UIW_Param
 
 ; #INTERNAL_USE_ONLY# ===========================================================================================================
 ; Name ..........: __UIW_ParseCondition
@@ -943,7 +1321,7 @@ EndFunc   ;==>__UIW_ParseProperty
 ;                  Failure - False and sets @error:
 ;                  | 1 -
 ; Author ........: Seadoggie01
-; Modified ......: November 7, 2019
+; Modified ......: October 14, 2020
 ; Remarks .......: Use Name:Value;Name2:Value2;Name3:Value3 format
 ; Related .......:
 ; Link ..........:
@@ -958,150 +1336,105 @@ Func __UIW_ParseCondition($oUIAutomation, $vProperties)
 	Local $aConditions[0], $pCondition
 	; For each property name pair
 	For $i = 0 To UBound($asProperties) - 1
-		$pCondition = __UIW_ParseProperty($oUIAutomation, $asProperties[$i])
+		$pCondition = __UIW_ParsePropertyCondition($oUIAutomation, $asProperties[$i])
 		If @error Then
-			_UIW_ErrorStack(1, "__UIW_ParseCondition")
-			Return SetError(1, $i, False)
+			Return SetError(_UIW_ErrorStack(1, "__UIW_ParseCondition - Part " & $i), $i, False)
 		Else
-			_Arr_ItemAdd($aConditions, $pCondition)
+			ReDim $aConditions[UBound($aConditions) + 1]
+			$aConditions[UBound($aConditions) - 1] = $pCondition
 		EndIf
 	Next
 
-	If UBound($aConditions) > 2 Then
-		$pCondition = _UIW_CreateAndConditionFromArray($oUIAutomation, $aConditions)
-		If @error Then
-			Return SetError(2, 0, False)
-		EndIf
-	ElseIf UBound($aConditions) = 1 Then
-		$pCondition = $aConditions[0]
-	Else
-		$pCondition = _UIW_CreateAndCondition($oUIAutomation, $aConditions[0], $aConditions[1])
-		If @error Then
-			Return SetError(3, 0, False)
-		EndIf
-	EndIf
-	; Don't put anything between below line and if statements, this passes back @error and @extended!
-	Return SetError(@error, @extended, $pCondition)
+	If Not IsArray($aConditions) Then Return SetError(_UIW_ErrorStack(2, "__UIW_ParseCondition"), 0, False)
+
+	Switch UBound($aConditions)
+		Case 2
+			$pCondition = _UIW_CreateAndCondition($oUIAutomation, $aConditions[0], $aConditions[1])
+			If @error Then Return SetError(_UIW_ErrorStack(3, "__UIW_ParseCondition"), 0, False)
+		Case 1
+			$pCondition = $aConditions[0]
+		Case Else
+			$pCondition = _UIW_CreateAndConditionFromArray($oUIAutomation, $aConditions)
+			If @error Then Return SetError(_UIW_ErrorStack(4, "__UIW_ParseCondition"), 0, False)
+	EndSwitch
+
+	Return $pCondition
+
+EndFunc   ;==>__UIW_ParseCondition
+
+; #INTERNAL_USE_ONLY# ===========================================================================================================
+; Name ..........: __UIW_ParsePropertyCondition
+; Description ...: Takes a single property as a string and parses it to get that type of property conidtion
+; Syntax ........: __UIW_ParsePropertyCondition($oUIAutomation, $sProperty)
+; Parameters ....: $oUIAutomation       - an object.
+;                  $sProperty           - a string value.
+; Return values .: Success - $pCondition
+;                  Failure - False and sets @error:
+;                  | 1  - individual property condition error
+;                  | 42 - unparseable
+; Author ........: Seadoggie01
+; Modified ......: January 21, 2021
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: __UIW_ParsePropertyCondition($oUIAutomation, "TYPE:" & $UIA_ButtonControlTypeId)
+; ===============================================================================================================================
+Func __UIW_ParsePropertyCondition($oUIAutomation, $sProperty)
+
+	; Split using a regular expression that verifies that the colon isn't escaped with a backslash
+	Local $aSplit = StringRegExp($sProperty, "(.*)(?<!\\):(.*)", 3)
+	If @error Then Return SetError(1, 0, False)
+
+	Local $sPropertyName = $aSplit[0]
+	Local $sPropertyValue = $aSplit[1]
+
+	; Unescape all the characters!
+	$sPropertyValue = StringReplace($sPropertyValue, "\\", "\")
+	$sPropertyValue = StringReplace($sPropertyValue, "\;", ";")
+	$sPropertyValue = StringReplace($sPropertyValue, "\:", ":")
+
+	Local $vTemp
+	Switch StringLower($sPropertyName)
+		Case "type"
+			$vTemp = _UIW_ControlTypePropertyCondition($oUIAutomation, Number($sPropertyValue))
+		Case "class"
+			$vTemp = _UIW_ClassNamePropertyCondition($oUIAutomation, $sPropertyValue)
+		Case "name"
+			$vTemp = _UIW_NamePropertyCondition($oUIAutomation, $sPropertyValue)
+		Case "id"
+			$vTemp = _UIW_AutomationIdPropertyCondition($oUIAutomation, $sPropertyValue)
+		Case "accesskey"
+			$vTemp = _UIW_AccessKeyProperyCondition($oUIAutomation, $sPropertyValue)
+		Case "bool"
+			$vTemp = _UIW_BoolCondition($oUIAutomation, $sPropertyValue)
+		Case "acceleratorkey"
+			$vTemp = _UIW_AcceleratorKeyPropertyCondition($oUIAutomation, $sPropertyValue)
+		Case "legacyiaccessiblestate"
+			$vTemp = _UIW_LegacyIAccessibleStatePropertyCondition($oUIAutomation, $sPropertyValue)
+		Case Else
+			$vTemp = _UIW_PropertyCondition($oUIAutomation, $sPropertyName, $sPropertyValue)
+			If @error Then Return SetError(_UIW_ErrorStack(-1, "__UIW_ParsePropertyCondition - Other"), 0, False)
+	EndSwitch
+
+	Return SetError(@error, @extended, $vTemp)
+
+EndFunc   ;==>__UIW_ParsePropertyCondition
+
+Func __UIW_TreeViewGetAll($oWalker, $oControl, $pCondition)
+
+	; Get the first element
+	Local $oElement = _UIW_TreeWalkerGetFirst($oWalker, $oControl)
+	; While there is an element
+	While IsObj($oElement)
+		$oWalker.GetNextSiblingElement($oControl, $pCondition)
+	WEnd
+EndFunc   ;==>__UIW_TreeViewGetAll
+
+Func __UIW_Debug($sText, $sPrefix = "+")
+
+	If StringLen($sPrefix) = 1 Then $sPrefix &= " "
+	ConsoleWrite($sPrefix & $sText & @CRLF)
 
 EndFunc
 
-Func __UIW_Param($vParam, $sType, $sObjName)
-;~ 	Debug(VarGetType($vParam))
-	If VarGetType($vParam) = $sType Then
-		If $sType = "Object" Then
-;~ 			Debug("Obj Name: " & ObjName($vParam))
-			Return ObjName($vParam) = $sObjName
-		Else
-			Return True
-		EndIf
-	Else
-		Return False
-	EndIf
-
-EndFunc   ;==>__UIW_Param
-
-Func __UIW_ErrHnd()
-	Return ObjEvent("AutoIt.Error", "__UIW_ErrorHandler")
-	; 	Copy to add error handler to function
-;~ 	Local $hErr = __UIW_ErrHnd()
-;~ 	#forceref $hErr
-EndFunc   ;==>__UIW_ErrHnd
-
-Func __UIW_ErrorHandler($oError)
-	#forceref $oError
-	Debug("COM Error Encountered in " & @ScriptName & @CRLF & _
-			"@AutoItVersion = " & @AutoItVersion & @CRLF & _
-			"@AutoItX64 = " & @AutoItX64 & @CRLF & _
-			"@Compiled = " & @Compiled & @CRLF & _
-			"@OSArch = " & @OSArch & @CRLF & _
-			"@OSVersion = " & @OSVersion & @CRLF & _
-			"Scriptline = " & $oError.scriptline & @CRLF & _
-			"NumberHex = " & Hex($oError.number, 8) & @CRLF & _
-			"Number = " & $oError.number & @CRLF & _
-			"WinDescription = " & StringStripWS($oError.WinDescription, 2) & @CRLF & _
-			"Description = " & StringStripWS($oError.Description, 2) & @CRLF & _
-			"Source = " & $oError.Source & @CRLF & _
-			"HelpFile = " & $oError.HelpFile & @CRLF & _
-			"HelpContext = " & $oError.HelpContext & @CRLF & _
-			"LastDllError = " & $oError.LastDllError)
-EndFunc   ;==>__UIW_ErrorHandler
-
-; #INTERNAL_USE_ONLY# ===========================================================================================================
-; Name ..........: __UIW_ElementArrayToArray
-; Description ...: Converts a IUIElementArray to an AutoIt array
-; Syntax ........: __UIW_ElementArrayToArray($oElementArray)
-; Parameters ....: $oElementArray       - an object.
-; Return values .: A 1D 0-based array of the UIElements from the Element Array
-; Author ........: Seadoggie01
-; Modified ......: November 24, 2019
-; Remarks .......: Uses IUIAutomationElementArray::get_Length and IUIAutomationElementArray::GetElement
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func __UIW_ElementArrayToArray($oElementArray)
-
-	Local $hErr = __UIW_ErrHnd()
-	#forceref $hErr
-
-	Local $iTemp, $pTemp, $oTemp
-	$oElementArray.Length($iTemp)
-	If @error Then Return SetError(@error, 0, False)
-	Local $aReturn[$iTemp]
-	For $i = 0 To $iTemp - 1
-		$oElementArray.GetElement($i, $pTemp)
-		If @error Then Return SetError(@error, $i, False)
-		$oTemp = ObjCreateInterface($pTemp, $sIID_IUIAutomationElement, $dtagIUIAutomationElement)
-		$aReturn[$i] = $oTemp
-	Next
-	Return $aReturn
-
-EndFunc   ;==>__UIW_ElementArrayToArray
-
 #EndRegion #INTERNAL_USE_ONLY# =====================================================================================================
-
-#CS
-#Region ### Testing ###
-
-; For testing purposes
-#include <CustomDebugging.au3>
-#include <MyMisc.au3>
-
-If @ScriptName = "UISimpleWrappers.au3" Then __UIW__INTERNALTESTING()
-
-Func __UIW__INTERNALTESTING()
-
-	WinActivate("Untitled - Notepad")
-	WinWaitActive("Untitled - Notepad")
-
-	Local $oUIAutomation = _UIW_Create()
-	Local $oDesktop = _UIW_RootObject($oUIAutomation)
-	Local $oNotepad = _UIW_FindFirst($oDesktop, "NAME:Untitled - Notepad;CLASS:Notepad")
-	Local $oNoteEdit = _UIW_FindFirst($oNotepad, "NAME:Text Editor;ID:15;TYPE:" & $UIA_EditControlTypeId)
-	If @error Then Exit Debug(_UIW_ErrorStack())
-	_UIW_SetValue($oNoteEdit, "temporary file contents")
-	Local $oFileMenu = _UIW_FindFirst($oNotepad, "NAME:File;TYPE:" & $UIA_MenuItemControlTypeId)
-	_UIW_Invoke($oFileMenu)
-	Sleep(250)
-	Local $oSaveAsMenu = _UIW_FindFirst($oNotepad, "NAME:Save As...;TYPE:" & $UIA_MenuItemControlTypeId)
-	_UIW_Invoke($oSaveAsMenu)
-
-	WinWait("Save As", "")
-
-	Local $oSaveAs = _UIW_FindFirst($oNotepad, "NAME:Save As;TYPE:" & $UIA_WindowControlTypeId)
-	Local $oFileName = _UIW_FindFirst($oSaveAs, "CLASS:Edit;ACCESSKEY:Alt+n")
-	_UIW_SetValue($oFileName, "temp.txt")
-	Local $oSaveBtn = _UIW_FindFirst($oSaveAs, "CLASS:Button;NAME:Save")
-	_UIW_Invoke($oSaveBtn)
-
-	If WinWait("Confirm Save As", "", 2) Then
-		Local $oConfirmSaveAs = _UIW_FindFirst($oSaveAs, "CLASS:CCPushButton;NAME:Yes")
-		If @error Then Exit Debug(_Arr_ToString(_UIW_ErrorStack()))
-		_UIW_Invoke($oConfirmSaveAs)
-		If @error Then Exit Debug(_Arr_ToString(_UIW_ErrorStack()))
-	EndIf
-
-EndFunc   ;==>__UIW__INTERNALTESTING
-
-#EndRegion ### Testing ###
-#CE
